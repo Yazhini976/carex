@@ -1,8 +1,18 @@
 import axios from 'axios';
 import { storage } from '../utils/storage';
 
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://carex-backend-7hsp.onrender.com/api';
+  }
+  return 'http://localhost:8080/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -57,7 +67,8 @@ api.interceptors.response.use(
     }
 
     if (error.request) {
-      const networkError = new Error('Cannot connect to CAREX server. Please verify backend is running on port 8080.');
+      const targetUrl = getBaseUrl();
+      const networkError = new Error(`Cannot connect to CAREX server (${targetUrl}). Please check your connection or verify backend status.`);
       networkError.status = 0;
       return Promise.reject(networkError);
     }
