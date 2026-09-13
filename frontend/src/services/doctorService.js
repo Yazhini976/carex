@@ -40,7 +40,20 @@ export const doctorService = {
   },
 
   createDoctor: async (data) => {
-    const response = await api.post('/doctors', data);
+    // Map frontend form fields to the AdminDoctorRequest backend DTO
+    const payload = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      phone: data.phone || null,
+      experienceYears: data.experienceYears ? parseInt(data.experienceYears, 10) : 0,
+      consultationFee: data.consultationFee ? parseFloat(data.consultationFee) : 0,
+      qualification: data.bio || null,
+      specialtyId: data.specialtyId ? parseInt(data.specialtyId, 10) : null,
+      allowsOnline: data.allowsOnline !== undefined ? data.allowsOnline : true,
+      allowsOffline: data.allowsOffline !== undefined ? data.allowsOffline : true,
+    };
+    const response = await api.post('/doctors/admin', payload);
     return response.data;
   },
 

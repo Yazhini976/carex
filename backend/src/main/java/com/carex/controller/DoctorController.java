@@ -1,5 +1,6 @@
 package com.carex.controller;
 
+import com.carex.dto.doctor.AdminDoctorRequest;
 import com.carex.dto.doctor.DoctorRequest;
 import com.carex.dto.doctor.DoctorResponse;
 import com.carex.dto.doctor.DoctorUpdateRequest;
@@ -9,6 +10,7 @@ import com.carex.exception.ResourceNotFoundException;
 import com.carex.mapper.DoctorMapper;
 import com.carex.service.DoctorService;
 import com.carex.service.DoctorSpecialtyService;
+import com.carex.service.AdminDoctorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -34,13 +37,16 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorSpecialtyService doctorSpecialtyService;
     private final DoctorMapper doctorMapper;
+    private final AdminDoctorService adminDoctorService;
 
     public DoctorController(DoctorService doctorService,
                             DoctorSpecialtyService doctorSpecialtyService,
-                            DoctorMapper doctorMapper) {
+                            DoctorMapper doctorMapper,
+                            AdminDoctorService adminDoctorService) {
         this.doctorService = doctorService;
         this.doctorSpecialtyService = doctorSpecialtyService;
         this.doctorMapper = doctorMapper;
+        this.adminDoctorService = adminDoctorService;
     }
 
     @GetMapping
@@ -116,13 +122,30 @@ public class DoctorController {
     }
 
     @PutMapping("/{id}/status")
-    @Operation(summary = "Toggle doctor active status", description = "Activates or deactivates a doctor")
+    @Operation(summary = "Set doctor active status", description = "Explicitly activates or deactivates a doctor")
     public ResponseEntity<DoctorResponse> setDoctorStatus(
             @PathVariable Long id,
             @RequestParam boolean active) {
         Doctor updated = doctorService.setActiveStatus(id, active);
         List<Specialty> specialties = doctorSpecialtyService.getSpecialtiesForDoctor(id);
         return ResponseEntity.ok(doctorMapper.toResponse(updated, specialties));
+    }
+
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Toggle doctor active status", description = "Flips the active status of a doctor without requiring a query param")
+    public ResponseEntity<DoctorResponse> toggleDoctorStatus(@PathVariable Long id) {
+        Doctor doctor = doctorService.getDoctorById(id);
+        boolean newStatus = !Boolean.TRUE.equals(doctor.getIsActive());
+        Doctor updated = doctorService.setActiveStatus(id, newStatus);
+        List<Specialty> specialties = doctorSpecialtyService.getSpecialtiesForDoctor(id);
+        return ResponseEntity.ok(doctorMapper.toResponse(updated, specialties));
+    }
+
+    @PostMapping("/admin")
+    @Operation(summary = "Admin: Register new doctor", description = "Creates user account + doctor profile in one step (admin only)")
+    public ResponseEntity<DoctorResponse> adminCreateDoctor(@Valid @RequestBody AdminDoctorRequest request) {
+        DoctorResponse response = adminDoctorService.registerDoctor(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
