@@ -55,8 +55,12 @@ public class DoctorMatchingServiceImpl implements DoctorMatchingService {
         List<DoctorMatchResult> results = new ArrayList<>();
 
         for (Doctor doctor : activeDoctors) {
-            // 1. Specialty match
+            // 1. Specialty match check — FILTER OUT non-matching doctors when specialtyId is given
             boolean specialtyMatch = specialtyId == null || doctorSpecialtyService.isAssigned(doctor.getId(), specialtyId);
+            if (specialtyId != null && !specialtyMatch) {
+                continue; // skip doctors who don't belong to the requested specialty
+            }
+
             Specialty specialty = specialtyId != null
                     ? doctorSpecialtyService.getSpecialtiesForDoctor(doctor.getId())
                         .stream()
