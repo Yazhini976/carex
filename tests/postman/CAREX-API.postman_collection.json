@@ -1,0 +1,319 @@
+{
+  "info": {
+    "name": "CAREX Healthcare API Collection",
+    "_postman_id": "c71a3962-d68a-4467-b50a-f01831818d00",
+    "description": "Postman Collection for CAREX Intelligent Doctor Appointment & Patient Flow Management System. Supports automated JWT token propagation and full lifecycle testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "patientId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "doctorId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "specialtyId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "slotId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "appointmentId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register Patient User",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"email\": \"alice@carex.com\",\n  \"password\": \"Password123!\",\n  \"phone\": \"+1-555-0145\",\n  \"role\": \"PATIENT\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"]}
+          }
+        },
+        {
+          "name": "Login User (Captures JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set(\"jwtToken\", jsonData.token);",
+                  "    pm.environment.set(\"jwtToken\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@carex.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"]}
+          }
+        },
+        {
+          "name": "Login Admin User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set(\"jwtToken\", jsonData.token);",
+                  "    pm.environment.set(\"jwtToken\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@carex.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Specialties & Doctors",
+      "item": [
+        {
+          "name": "Get All Specialties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{baseUrl}}/api/specialties", "host": ["{{baseUrl}}"], "path": ["api", "specialties"]}
+          }
+        },
+        {
+          "name": "Get Active Doctors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{baseUrl}}/api/doctors/active", "host": ["{{baseUrl}}"], "path": ["api", "doctors", "active"]}
+          }
+        },
+        {
+          "name": "Get Available Slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{baseUrl}}/api/slots/available", "host": ["{{baseUrl}}"], "path": ["api", "slots", "available"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. CAREX Intelligence",
+      "item": [
+        {
+          "name": "Smart Specialty Recommendation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"inputText\": \"I have severe skin rashes, irritation, and acne outbreaks.\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/intelligence/specialty-recommendation", "host": ["{{baseUrl}}"], "path": ["api", "intelligence", "specialty-recommendation"]}
+          }
+        },
+        {
+          "name": "Explainable Doctor Matching",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialtyId\": 3,\n  \"mode\": \"ONLINE\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/intelligence/doctor-match", "host": ["{{baseUrl}}"], "path": ["api", "intelligence", "doctor-match"]}
+          }
+        },
+        {
+          "name": "Waiting-Time Prediction",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "url": {"raw": "{{baseUrl}}/api/intelligence/wait-time/{{appointmentId}}", "host": ["{{baseUrl}}"], "path": ["api", "intelligence", "wait-time", "{{appointmentId}}"]}
+          }
+        },
+        {
+          "name": "Doctor Workload Intelligence",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "url": {"raw": "{{baseUrl}}/api/intelligence/workload/doctor/{{doctorId}}", "host": ["{{baseUrl}}"], "path": ["api", "intelligence", "workload", "doctor", "{{doctorId}}"]}
+          }
+        },
+        {
+          "name": "What-If Scheduling Simulation (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctorId\": 1,\n  \"date\": \"2026-09-25\",\n  \"scenario\": \"DOCTOR_UNAVAILABLE\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/intelligence/simulation", "host": ["{{baseUrl}}"], "path": ["api", "intelligence", "simulation"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Appointments Workflow",
+      "item": [
+        {
+          "name": "Book Appointment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.appointmentId) {",
+                  "    pm.collectionVariables.set(\"appointmentId\", jsonData.appointmentId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"doctorId\": 1,\n  \"specialtyId\": 1,\n  \"slotId\": 1,\n  \"mode\": \"ONLINE\",\n  \"notes\": \"Initial consultation\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/appointments", "host": ["{{baseUrl}}"], "path": ["api", "appointments"]}
+          }
+        },
+        {
+          "name": "Get Appointment By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "url": {"raw": "{{baseUrl}}/api/appointments/{{appointmentId}}", "host": ["{{baseUrl}}"], "path": ["api", "appointments", "{{appointmentId}}"]}
+          }
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "url": {"raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/cancel", "host": ["{{baseUrl}}"], "path": ["api", "appointments", "{{appointmentId}}", "cancel"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Notifications",
+      "item": [
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "url": {"raw": "{{baseUrl}}/api/notifications/user/1", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "user", "1"]}
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "url": {"raw": "{{baseUrl}}/api/notifications/user/1/unread-count", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "user", "1", "unread-count"]}
+          }
+        },
+        {
+          "name": "Get Notification Delivery Health (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{jwtToken}}"}
+            ],
+            "url": {"raw": "{{baseUrl}}/api/notifications/stats", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "stats"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Actuator & Health",
+      "item": [
+        {
+          "name": "Health Check Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{baseUrl}}/actuator/health", "host": ["{{baseUrl}}"], "path": ["actuator", "health"]}
+          }
+        }
+      ]
+    }
+  ]
+}

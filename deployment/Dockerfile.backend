@@ -1,0 +1,33 @@
+# ==============================================================================
+# Multi-stage Dockerfile for CAREX Spring Boot Backend
+# ==============================================================================
+
+# Stage 1: Build JAR using Maven
+FROM maven:3.9.6-eclipse-temurin-17-alpine AS builder
+WORKDIR /build
+
+COPY backend/pom.xml .
+RUN mvn dependency:go-offline -B
+
+COPY backend/src ./src
+RUN mvn clean package -DskipTests -B
+
+# Stage 2: Minimal Production JRE Runtime
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# Security: Create non-root user
+RUN addgroup -S carexgroup && adduser -S carexuser -G carexgroup
+
+COPY --from=builder /build/target/carex-backend-*.jar app.jar
+RUN chown -R carexuser:carexgroup /app
+
+USER carexuser
+
+ENV SERVER_PORT=8080
+EXPOSE 8080
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]

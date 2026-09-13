@@ -1,0 +1,49 @@
+services:
+  # ----------------------------------------------------------------------------
+  # CAREX Spring Boot Backend Service on Render
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: carex-backend
+    runtime: java
+    env: java
+    buildCommand: "mvn clean package -DskipTests"
+    startCommand: "java -jar target/carex-backend-0.0.1-SNAPSHOT.jar"
+    rootDir: backend
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_HOST
+        fromDatabase:
+          name: carex-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: carex-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: carex-postgres
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: carex-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: carex-postgres
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: CAREX_EMAIL_ENABLED
+        value: "false"
+
+# ------------------------------------------------------------------------------
+# Managed Free PostgreSQL Database on Render
+# ------------------------------------------------------------------------------
+databases:
+  - name: carex-postgres
+    databaseName: carex
+    user: carex
+    plan: free

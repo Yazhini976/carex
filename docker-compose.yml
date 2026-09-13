@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. PostgreSQL 17 Relational Database
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: carex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-carex}
+      POSTGRES_USER: ${POSTGRES_USER:-carex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-carex}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - carex_pgdata:/var/lib/postgresql/data
+      - ./database/seed-data.sql:/docker-entrypoint-initdb.d/01-seed-data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-carex} -d ${POSTGRES_DB:-carex}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - carex-network
+
+  # ----------------------------------------------------------------------------
+  # 2. CAREX Spring Boot Backend Service
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.backend
+    container_name: carex-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-carex}
+      DB_USERNAME: ${POSTGRES_USER:-carex}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-carex}
+      JWT_SECRET: ${JWT_SECRET:-carexSecretKeyMustBeAtLeast256BitsLongForHMACSHA256Security1234567890}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      CAREX_EMAIL_ENABLED: ${CAREX_EMAIL_ENABLED:-false}
+      MAIL_HOST: ${MAIL_HOST:-localhost}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@carex.com}
+      CAREX_REMINDER_MINUTES_BEFORE: ${CAREX_REMINDER_MINUTES_BEFORE:-30}
+      CAREX_REMINDER_SCHEDULER_ENABLED: ${CAREX_REMINDER_SCHEDULER_ENABLED:-true}
+      CAREX_CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost:80,http://frontend
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - carex-network
+
+  # ----------------------------------------------------------------------------
+  # 3. CAREX React SPA Frontend Service (Nginx)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: carex-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+      - "80:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    networks:
+      - carex-network
+
+# ------------------------------------------------------------------------------
+# Volumes & Network Definitions
+# ------------------------------------------------------------------------------
+volumes:
+  carex_pgdata:
+    driver: local
+
+networks:
+  carex-network:
+    driver: bridge

@@ -1,0 +1,97 @@
+name: CAREX Continuous Integration & Build Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # 1. Backend Build & Test Suite
+  # ----------------------------------------------------------------------------
+  backend-ci:
+    name: Backend Build & Automated Tests (Spring Boot)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: carex
+          POSTGRES_USER: carex
+          POSTGRES_PASSWORD: carex
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Eclipse Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compile & Run Backend Test Suite
+        working-directory: backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: carex
+          DB_USERNAME: carex
+          DB_PASSWORD: carex
+          CAREX_EMAIL_ENABLED: false
+        run: mvn clean verify -B
+
+  # ----------------------------------------------------------------------------
+  # 2. Frontend Build & Smoke Tests
+  # ----------------------------------------------------------------------------
+  frontend-ci:
+    name: Frontend Tests & Production Bundle (React / Vite)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Execute Frontend Tests
+        working-directory: frontend
+        run: npm test
+
+      - name: Build Optimized Production Bundle
+        working-directory: frontend
+        run: npm run build
+
+  # ----------------------------------------------------------------------------
+  # 3. Container & Docker Compose Validation
+  # ----------------------------------------------------------------------------
+  docker-validation:
+    name: Docker Configuration & Build Validation
+    runs-on: ubuntu-latest
+    needs: [backend-ci, frontend-ci]
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configuration
+        run: docker compose config
