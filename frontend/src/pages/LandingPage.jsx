@@ -78,7 +78,7 @@ export const LandingPage = () => {
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem 1.25rem', flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 600, color: '#f8fafc' }}>CAREX Engine Status:</span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10b981' }} />
@@ -93,7 +93,7 @@ export const LandingPage = () => {
             Notifications: <strong style={{ color: '#ffffff' }}>Active</strong>
           </span>
         </div>
-        <div style={{ display: 'none', md: 'block', color: '#64748b' }}>
+        <div style={{ display: 'none', color: '#64748b' }}>
           Hackathon Build • Production Demo Mode
         </div>
       </div>
@@ -103,7 +103,7 @@ export const LandingPage = () => {
         style={{
           background: 'linear-gradient(135deg, #0c4a6e 0%, #0284c7 50%, #0369a1 100%)',
           color: '#ffffff',
-          padding: '3.25rem 1.5rem 4.5rem 1.5rem',
+          padding: '3.25rem 1.25rem 4.5rem 1.25rem',
           textAlign: 'center',
           position: 'relative',
         }}
@@ -118,19 +118,20 @@ export const LandingPage = () => {
               backdropFilter: 'blur(8px)',
               padding: '0.35rem 1rem',
               borderRadius: '9999px',
-              fontSize: '0.8rem',
+              fontSize: '0.78rem',
               fontWeight: 600,
               marginBottom: '1.25rem',
               border: '1px solid rgba(255, 255, 255, 0.2)',
+              maxWidth: '100%',
             }}
           >
             <Sparkles size={15} color="#7dd3fc" />
-            <span>Intelligent Doctor Appointment & Patient Flow Management System</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Intelligent Doctor Appointment & Patient Flow System</span>
           </div>
 
           <h1
             style={{
-              fontSize: '2.75rem',
+              fontSize: 'clamp(1.9rem, 6.5vw, 2.75rem)',
               fontWeight: 800,
               lineHeight: 1.18,
               marginBottom: '1rem',
@@ -143,7 +144,7 @@ export const LandingPage = () => {
 
           <p
             style={{
-              fontSize: '1.1rem',
+              fontSize: 'clamp(0.95rem, 3.2vw, 1.1rem)',
               color: 'rgba(255, 255, 255, 0.92)',
               maxWidth: '640px',
               margin: '0 auto 2rem auto',

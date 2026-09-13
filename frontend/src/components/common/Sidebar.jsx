@@ -50,33 +50,29 @@ export const Sidebar = ({ isOpen = true, onClose }) => {
   const navItems = role === 'PATIENT' ? patientNav : role === 'DOCTOR' ? doctorNav : role === 'ADMIN' ? adminNav : [];
 
   return (
-    <aside
-      style={{
-        width: '260px',
-        backgroundColor: '#ffffff',
-        borderRight: '1px solid var(--gray-200)',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        height: 'calc(100vh - 64px)',
-        position: 'sticky',
-        top: '64px',
-        overflowY: 'auto',
-      }}
-    >
+    <aside className={`sidebar-aside ${isOpen ? 'open' : 'closed'}`}>
       <div style={{ padding: '1.25rem 1rem' }}>
-        <div
-          style={{
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            color: 'var(--gray-400)',
-            marginBottom: '0.75rem',
-            paddingLeft: '0.75rem',
-          }}
-        >
-          {role} PORTAL
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', paddingLeft: '0.75rem' }}>
+          <div
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: 'var(--gray-400)',
+            }}
+          >
+            {role} PORTAL
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="sidebar-close-btn"
+              aria-label="Close Sidebar"
+            >
+              ✕
+            </button>
+          )}
         </div>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {navItems.map((item) => {
@@ -85,6 +81,11 @@ export const Sidebar = ({ isOpen = true, onClose }) => {
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={() => {
+                  if (onClose && typeof window !== 'undefined' && window.innerWidth <= 768) {
+                    onClose();
+                  }
+                }}
                 style={({ isActive }) => ({
                   display: 'flex',
                   alignItems: 'center',
